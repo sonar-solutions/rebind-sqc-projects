@@ -31,18 +31,26 @@ def map_project_integration_id(devOpsPlatform, repositoryId, slug, **_):
         results = slug
     else:
         results = repositoryId
-    print(results)
     return results
 
 
 def update_project_bindings(binding):
-    resp = v2_client.patch(
+    # create new existing binding
+    v2_client.post(
+        'dop-translation/project-bindings',
+        json={
+            "projectId": binding["projectId"],
+            "repositoryId": map_project_integration_id(**binding),
+        }
+    )
+    # update existing binding
+    v2_client.patch(
         f'dop-translation/project-bindings/{binding["id"]}',
         json={
             "repositoryId": map_project_integration_id(**binding),
         }
     )
-    print(resp.json())
+
 
 
 if __name__ == '__main__':
@@ -51,5 +59,7 @@ if __name__ == '__main__':
 
     for project in projects:
         bindings.extend(get_project_bindings(project['key']))
+    # export project & bindings to csv
+    # update the slug or repo ID as needed
     for binding in bindings:
         update_project_bindings(binding=binding)
